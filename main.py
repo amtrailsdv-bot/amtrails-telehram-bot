@@ -28,15 +28,15 @@ WELCOME_TEXT = (
 )
 
 def main_menu():
-rows = []
+    rows = []
 
-if CATALOG_URL:
+if catalog_URL:
     rows.append([
-        InlineKeyboardButton("🛒 Каталог товаров", url=CATALOG_URL)
+        InLineKeyboardButton("🛒 Каталог товаров", url=CATALOG_URL)
     ])
 else:
     rows.append([
-        InlineKeyboardButton("🛒 Каталог товаров", callback_data="catalog")
+        InLineKeyboardButton("🛒 Каталог товаров", callback_data="catalog")
     ])
 
 rows.extend([
