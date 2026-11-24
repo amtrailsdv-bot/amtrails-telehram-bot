@@ -1,91 +1,127 @@
 import os
 import logging
+
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
-    Application,
-    CommandHandler,
-    CallbackQueryHandler,
-    ContextTypes,
+Application,
+CommandHandler,
+CallbackQueryHandler,
+ContextTypes,
 )
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 INSTAGRAM_URL = "https://www.instagram.com/a_m_trails/"
-# Replace these placeholders with your real shop links/contact:
 CATALOG_URL = os.getenv("CATALOG_URL", "")
 MANAGER_URL = os.getenv("MANAGER_URL", "")
 
 logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.INFO,
+format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+level=logging.INFO,
 )
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(name)
 
 WELCOME_TEXT = (
-    "🚵 Добро пожаловать в AMTrails!\n\n"
-    "Магазин велосипедных запчастей и компонентов.\n"
-    "Поможем подобрать комплектующие для твоего велосипеда.\n\n"
-    "Выбирай нужный раздел:"
+"🚵 Добро пожаловать в AMTrails!\n\n"
+"Магазин велосипедных запчастей и компонентов.\n"
+"Поможем подобрать комплектующие для твоего велосипеда.\n\n"
+"Выбирай нужный раздел:"
 )
 
-def main_menu() -> InlineKeyboardMarkup:
-    rows = []
-    if CATALOG_URL:
-        rows.append([InlineKeyboardButton("🛒 Каталог товаров", url=CATALOG_URL)])
-    else:
-        rows.append([InlineKeyboardButton("🛒 Каталог товаров", callback_data="catalog")])
-    rows.extend([
-        [InlineKeyboardButton("🔥 Новинки", callback_data="new_items")],
-        [InlineKeyboardButton("💬 Связаться с менеджером", callback_data="manager")],
-        [InlineKeyboardButton("📸 Наш Instagram", url=INSTAGRAM_URL)],
+def main_menu():
+rows = []
+
+if CATALOG_URL:
+    rows.append([
+        InlineKeyboardButton("🛒 Каталог товаров", url=CATALOG_URL)
     ])
-    return InlineKeyboardMarkup(rows)
+else:
+    rows.append([
+        InlineKeyboardButton("🛒 Каталог товаров", callback_data="catalog")
+    ])
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(WELCOME_TEXT, reply_markup=main_menu())
+rows.extend([
+    [InlineKeyboardButton("🔥 Новинки", callback_data="new_items")],
+    [InlineKeyboardButton("💬 Связаться с менеджером", callback_data="manager")],
+    [InlineKeyboardButton("📸 Наш Instagram", url=INSTAGRAM_URL)],
+])
 
-async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    query = update.callback_query
-    await query.answer()
+return InlineKeyboardMarkup(rows)
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+await update.message.reply_text(
+WELCOME_TEXT,
+reply_markup=main_menu()
+)
 
-    if query.data == "catalog":
-        text = "🛒 Каталог AMTrails пока настраивается. Напиши нам, и мы поможем подобрать нужную деталь."
-    elif query.data == "new_items":
-        text = "🔥 Раздел новинок скоро появится. Следи за обновлениями в нашем Instagram!"
-    elif query.data == "manager":
-        if MANAGER_URL:
-            await query.message.reply_text("💬 Связаться с менеджером:", reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("Написать менеджеру", url=MANAGER_URL)],
-                [InlineKeyboardButton("⬅️ В главное меню", callback_data="home")],
-            ]))
-            return
-        text = "💬 Контакт менеджера ещё не добавлен. Напиши нам в Instagram: @a_m_trails"
-    elif query.data == "home":
-        await query.message.reply_text(WELCOME_TEXT, reply_markup=main_menu())
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+await update.message.reply_text(
+"Нажми /start, чтобы открыть главное меню AMTrails."
+)
+
+async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
+query = update.callback_query
+await query.answer()
+
+if query.data == "catalog":
+    text = (
+        "🛒 Каталог AMTrails пока настраивается. "
+        "Напиши нам, и мы поможем подобрать нужную деталь."
+    )
+
+elif query.data == "new_items":
+    text = (
+        "🔥 Раздел новинок скоро появится. "
+        "Следи за обновлениями в нашем Instagram!"
+    )
+
+elif query.data == "manager":
+    if MANAGER_URL:
+        await query.message.reply_text(
+            "💬 Связаться с менеджером:",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton(
+                    "Написать менеджеру", url=MANAGER_URL
+                )]
+            ])
+        )
         return
-    else:
-        text = "Выбери раздел в меню."
-    await query.message.reply_text(text, reply_markup=InlineKeyboardMarkup([
-        [InlineKeyboardButton("⬅️ В главное меню", callback_data="home")]
-    ]))
 
-async def post_init(application: Application) -> None:
-    await application.bot.set_my_commands([
-        ("start", "Главное меню AMTrails"),
-        ("help", "Помощь"),
+    text = (
+        "💬 Контакт менеджера ещё не добавлен. "
+        "Напиши нам в Instagram: @a_m_trails"
+    )
+
+elif query.data == "home":
+    await query.message.reply_text(
+        WELCOME_TEXT,
+        reply_markup=main_menu()
+    )
+    return
+
+else:
+    text = "Выбери раздел в меню."
+
+await query.message.reply_text(
+    text,
+    reply_markup=InlineKeyboardMarkup([
+        [InlineKeyboardButton(
+            "⬅️ В главное меню", callback_data="home"
+        )]
     ])
+)
+def main():
+if not BOT_TOKEN:
+raise RuntimeError(
+"Не задан BOT_TOKEN в переменных окружения Railway."
+)
 
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("Нажми /start, чтобы открыть главное меню AMTrails.")
+application = Application.builder().token(BOT_TOKEN).build()
 
-def main() -> None:
-    if not BOT_TOKEN:
-        raise RuntimeError("Не задан BOT_TOKEN. Добавь токен в переменные окружения сервера.")
-    application = Application.builder().token(BOT_TOKEN).post_init(post_init).build()
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("help", help_command))
-    application.add_handler(CallbackQueryHandler(buttons))
-    logger.info("AMTrails bot is starting...")
-    application.run_polling()
+application.add_handler(CommandHandler("start", start))
+application.add_handler(CommandHandler("help", help_command))
+application.add_handler(CallbackQueryHandler(buttons))
 
-if __name__ == "__main__":
-    main()
+logger.info("AMTrails bot is starting...")
+
+application.run_polling(drop_pending_updates=True)
+if name == "main":
+main()
